@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build-Attack - Minecraft Netzwerk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b00 0%, #ff9a00 25%, #ffd700 50%, #ffed4e 75%, #ffd700 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Animierte Sterne */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Layout */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #ff6b00 0%, #ff9a00 50%, #ffd700 100%);
+            padding: 30px 20px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            border-radius: 0 30px 30px 0;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-title {
+            color: #ffd700;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px #ffd700; }
+            50% { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5), 0 0 20px #ffed4e, 0 0 30px #ffed4e; }
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 15px;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid white;
+            border-radius: 15px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(10px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-button.active {
+            background: #ffd700;
+            color: #ff6b00;
+            transform: translateX(10px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .nav-button.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .nav-button.disabled:hover {
+            transform: none;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 40px;
+        }
+
+        .logo-header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #ffd700;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .logo-header h1 {
+            color: #ffd700;
+            font-size: 48px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+            margin-bottom: 10px;
+        }
+
+        .logo-header p {
+            color: white;
+            font-size: 18px;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.9), rgba(255, 215, 0, 0.9));
+            border-radius: 20px;
+            padding: 60px;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(255, 154, 0, 0.4);
+            animation: slideDown 0.8s ease;
+            border: 3px solid #ffd700;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero h2 {
+            color: white;
+            font-size: 42px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+        }
+
+        .hero p {
+            color: white;
+            font-size: 20px;
+            line-height: 1.6;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.8), rgba(255, 215, 0, 0.8));
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            border: 3px solid #ffd700;
+            animation: fadeInUp 0.6s ease;
+            animation-fill-mode: both;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-card:nth-child(1) { animation-delay: 0.1s; }
+        .info-card:nth-child(2) { animation-delay: 0.2s; }
+        .info-card:nth-child(3) { animation-delay: 0.3s; }
+        .info-card:nth-child(4) { animation-delay: 0.4s; }
+        .info-card:nth-child(5) { animation-delay: 0.5s; }
+        .info-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5);
+        }
+
+        .info-card h3 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .info-card p {
+            color: white;
+            line-height: 1.8;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: bounce 2s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .contact-form {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.9), rgba(255, 215, 0, 0.9));
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 3px solid #ffd700;
+            box-shadow: 0 10px 40px rgba(255, 154, 0, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            color: white;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            font-size: 18px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 3px solid white;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            border-color: #ffd700;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #ff6b00, #ff9a00);
+            color: white;
+            padding: 15px 40px;
+            border: 3px solid white;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.7);
+        }
+
+        .coming-soon {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.9), rgba(255, 215, 0, 0.9));
+            border-radius: 15px;
+            padding: 60px;
+            text-align: center;
+            animation: pulse 2s ease infinite;
+            border: 3px solid #ffd700;
+            box-shadow: 0 10px 40px rgba(255, 154, 0, 0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .coming-soon h2 {
+            color: white;
+            font-size: 42px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .coming-soon p {
+            color: white;
+            font-size: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Team Seite */
+        .team-section {
+            margin-bottom: 50px;
+        }
+
+        .team-section h3 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 25px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.7), rgba(255, 215, 0, 0.7));
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid #ffd700;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .team-card {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.85), rgba(255, 215, 0, 0.85));
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 3px solid #ffd700;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.6);
+        }
+
+        .team-icon {
+            font-size: 56px;
+            margin-bottom: 15px;
+            animation: bounce 2s ease infinite;
+        }
+
+        .team-name {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .team-role {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .webhook-info {
+            background: rgba(255, 107, 0, 0.3);
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .webhook-info h4 {
+            margin-bottom: 10px;
+            color: #ffd700;
+            font-size: 20px;
+        }
+
+        .webhook-info code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #ffd700;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            border: 3px solid white;
+            border-radius: 10px;
+            padding: 10px 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu-toggle span {
+            display: block;
+            width: 30px;
+            height: 3px;
+            background: white;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+
+        @media (max-width: 968px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1000;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .logo-header h1 {
+                font-size: 32px;
+            }
+
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animierte Sterne -->
+    <div class="stars" id="stars"></div>
+
+    <!-- Mobile Menu Toggle -->
+    <div class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">KATEGORIEN</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-button active" data-page="home">
+                        <span class="nav-icon">🏠</span>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-button" data-page="team">
+                        <span class="nav-icon">👥</span>
+                        <span>Team</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-button" data-page="kontakt">
+                        <span class="nav-icon">📧</span>
+                        <span>Kontakt</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-button" data-page="events">
+                        <span class="nav-icon">🎮</span>
+                        <span>Events</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-button" data-page="spielmodi">
+                        <span class="nav-icon">⚔️</span>
+                        <span>Spiel Modi</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-button disabled" data-page="shop">
+                        <span class="nav-icon">🛒</span>
+                        <span>Shop (Bald)</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="logo-header">
+                <h1>⚔️ BUILD-ATTACK ⚔️</h1>
+                <p>Dein ultimatives Minecraft Netzwerk</p>
+            </div>
+
+            <!-- Home Page -->
+            <div class="page active" id="home">
+                <div class="hero">
+                    <h2>Willkommen bei Build-Attack!</h2>
+                    <p>Erlebe spannende Abenteuer mit unserer großartigen Community!</p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="icon">🏗️</div>
+                        <h3>CityBuild</h3>
+                        <p>Baue deine eigene Stadt und werde zum größten Baumeister! Erschaffe beeindruckende Bauwerke und handle mit anderen Spielern.</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="icon">⚔️</div>
+                        <h3>PVP</h3>
+                        <p>Stelle dich epischen Kämpfen! Zeige deine Skills im intensiven Player vs Player Modus und werde zum Champion der Arena.</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="icon">🌍</div>
+                        <h3>SMP</h3>
+                        <p>Survival Multiplayer! Überlebe gemeinsam mit Freunden, erkunde die Welt und baue eine Community auf.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Page -->
+            <div class="page" id="team">
+                <div class="hero">
+                    <h2>Unser Team</h2>
+                    <p>Lerne die Leute kennen, die Build-Attack möglich machen!</p>
+                </div>
+
+                <div class="team-section">
+                    <h3>👑 Owner</h3>
+                    <div class="team-grid">
+                        <div class="team-card">
+                            <div class="team-icon">👑</div>
+                            <div class="team-name">MaxBuilder</div>
+                            <div class="team-role">Server Gründer</div>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-icon">👑</div>
+                            <div class="team-name">ProGamer99</div>
+                            <div class="team-role">Co-Owner</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="team-section">
+                    <h3>🛡️ Administratoren</h3>
+                    <div class="team-grid">
+                        <div class="team-card">
+                            <div class="team-icon">🛡️</div>
+                            <div class="team-name">TechMaster</div>
+                            <div class="team-role">Head-Admin</div>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-icon">🛡️</div>
+                            <div class="team-name">CodeNinja</div>
+                            <div class="team-role">Developer</div>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-icon">🛡️</div>
+                            <div class="team-name">BuildPro</div>
+                            <div class="team-role">Admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="team-section">
+                    <h3>⭐ Moderatoren</h3>
+                    <div class="team-grid">
+                        <div class="team-card">
+                            <div class="team-icon">⭐</div>
+                            <div class="team-name">FriendlyMod</div>
+                            <div class="team-role">Senior Moderator</div>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-icon">⭐</div>
+                            <div class="team-name">HelpfulGuy</div>
+                            <div class="team-role">Moderator</div>
+                        </div>
+                        <div class="team-card">
+                            <div class="team-icon">⭐</div>
+                            <div class="team-name">ChatGuard</div>
+                            <div class="team-role">Moderator</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kontakt Page -->
+            <div class="page" id="kontakt">
+                <div class="hero">
+                    <h2>Kontaktiere uns</h2>
+                    <p>Hast du Fragen oder Anregungen? Wir freuen uns auf deine Nachricht!</p>
+                </div>
+
+                <div class="contact-form">
+                    <form id="contactForm">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">E-Mail</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Nachricht</label>
+                            <textarea id="message" required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Nachricht senden</button>
+                    </form>
+
+                    <div class="webhook-info">
+                        <h4>📌 Discord Webhook einrichten:</h4>
+                        <p>Um Nachrichten in Discord zu erhalten:</p>
+                        <ol style="margin-top: 10px; line-height: 1.8;">
+                            <li>Gehe zu deinem Discord-Server</li>
+                            <li>Servereinstellungen → Integrationen → Webhooks</li>
+                            <li>Erstelle einen neuen Webhook</li>
+                            <li>Kopiere die Webhook-URL</li>
+                            <li>Füge die URL unten im Code bei <code>WEBHOOK_URL</code> ein</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Page -->
+            <div class="page" id="events">
+                <div class="hero">
+                    <h2>Events & Turniere</h2>
+                    <p>Verpasse keine spannenden Events und Turniere auf Build-Attack!</p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="icon">🏆</div>
+                        <h3>Wöchentliche Events</h3>
+                        <p>Jeden Samstag um 18:00 Uhr findet ein großes Community-Event statt mit tollen Preisen!</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="icon">🎮</div>
+                        <h3>PVP Turniere</h3>
+                        <p>Monatliche PVP-Turniere mit exklusiven Belohnungen für die besten Kämpfer.</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="icon">🎉</div>
+                        <h3>Spezial Events</h3>
+                        <p>Saisonale Events zu Weihnachten, Halloween und anderen Feiertagen mit besonderen Inhalten.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spiel Modi Page -->
+            <div class="page" id="spielmodi">
+                <div class="hero">
+                    <h2>Unsere Spielmodi</h2>
+                    <p>Entdecke die verschiedenen Spielmodi auf Build-Attack!</p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="icon">🏗️</div>
+                        <h3>CityBuild</h3>
+                        <p>Der klassische CityBuild-Modus mit Grundstücken, Wirtschaft und vielen Features. Baue deine Traumstadt und werde reich!</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="icon">⚔️</div>
+                        <h3>PVP</h3>
+                        <p>Intensive PVP-Action mit verschiedenen Arenen und Modi. Kämpfe gegen andere Spieler und steige in der Rangliste auf!</p>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="icon">🌍</div>
+                        <h3>SMP</h3>
+                        <p>Reines Survival-Erlebnis mit Freunden. Keine Plugins, die das Spielerlebnis verändern - nur du, deine Freunde und Minecraft!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shop Page -->
+            <div class="page" id="shop">
+                <div class="coming-soon">
+                    <h2>🛒 Shop kommt bald!</h2>
+                    <p>Wir arbeiten hart daran, dir bald einen tollen Shop mit exklusiven Items und Rängen anbieten zu können.</p>
+                    <p style="margin-top: 20px; opacity: 0.9;">Stay tuned! 🚀</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Sterne erstellen
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numberOfStars = 100;
+
+            for (let i = 0; i < numberOfStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                const size = Math.random() * 3 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                
+                star.style
