@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buildattack - Gaming Community</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+        }
+
+        header {
+            background: linear-gradient(90deg, #ff6b00 0%, #ffa500 100%);
+            padding: 1rem 0;
+            box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .hero {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            background: linear-gradient(90deg, #ff6b00, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 107, 0, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.7)); }
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            color: #ccc;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button {
+            background: linear-gradient(90deg, #ff6b00, #ffa500);
+            color: white;
+            padding: 1rem 3rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(255, 107, 0, 0.6);
+        }
+
+        .section {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section h2 {
+            font-size: 3rem;
+            color: #ffa500;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .team-card {
+            background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+            border: 2px solid #ff6b00;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2);
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 30px rgba(255, 107, 0, 0.4);
+            border-color: #ffd700;
+        }
+
+        .team-avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .team-card h3 {
+            color: #ffa500;
+            margin-bottom: 0.5rem;
+        }
+
+        .team-card p {
+            color: #ccc;
+        }
+
+        .events-grid {
+            display: grid;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .event-card {
+            background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+            border-left: 5px solid #ff6b00;
+            border-radius: 10px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .event-card:hover {
+            border-left-color: #ffd700;
+            transform: translateX(10px);
+            box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
+        }
+
+        .event-date {
+            color: #ffa500;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .event-card h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+
+        .contact-form {
+            max-width: 600px;
+            margin: 3rem auto;
+            background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+            padding: 3rem;
+            border-radius: 15px;
+            border: 2px solid #ff6b00;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #ffa500;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            background: #1a1a1a;
+            border: 2px solid #3d3d3d;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ffa500;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        footer {
+            background: #1a1a1a;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 4rem;
+            border-top: 3px solid #ff6b00;
+        }
+
+        footer p {
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+
+            .section h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">⚡ BUILDATTACK</div>
+            <ul class="nav-links">
+                <li><a href="#home" onclick="showSection('home')">Home</a></li>
+                <li><a href="#team" onclick="showSection('team')">Team</a></li>
+                <li><a href="#events" onclick="showSection('events')">Events</a></li>
+                <li><a href="#kontakt" onclick="showSection('kontakt')">Kontakt</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div id="home" class="section active">
+        <div class="hero">
+            <h1>BUILDATTACK</h1>
+            <p>Deine Gaming Community für epische Battles und unvergessliche Momente</p>
+            <button class="cta-button" onclick="showSection('team')">Lerne uns kennen</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 4rem;">
+            <h2 style="color: #ffa500; margin-bottom: 2rem;">Willkommen bei Buildattack</h2>
+            <p style="max-width: 800px; margin: 0 auto; line-height: 1.8; color: #ccc; font-size: 1.1rem;">
+                Wir sind eine leidenschaftliche Gaming-Community, die zusammenkommt, um gemeinsam zu spielen, 
+                zu streamen und unvergessliche Gaming-Erlebnisse zu teilen. Egal ob Anfänger oder Pro - 
+                bei uns ist jeder willkommen!
+            </p>
+        </div>
+    </div>
+
+    <div id="team" class="section">
+        <h2>Unser Team</h2>
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="team-avatar">🎮</div>
+                <h3>Max "BuildMaster"</h3>
+                <p>Gründer & Team Leader</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar">⚔️</div>
+                <h3>Sarah "StrikeQueen"</h3>
+                <p>Pro Gamer & Strategin</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar">🎯</div>
+                <h3>Tom "Sniper"</h3>
+                <p>Content Creator</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar">🔥</div>
+                <h3>Lisa "FireStorm"</h3>
+                <p>Community Manager</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar">⚡</div>
+                <h3>Chris "Thunder"</h3>
+                <p>Stream Moderator</p>
+            </div>
+            <div class="team-card">
+                <div class="team-avatar">🏆</div>
+                <h3>Nina "Champion"</h3>
+                <p>Tournament Organizer</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="events" class="section">
+        <h2>Kommende Events</h2>
+        <div class="events-grid">
+            <div class="event-card">
+                <div class="event-date">📅 15. November 2024</div>
+                <h3>Großes Community Tournament</h3>
+                <p>Unser monatliches Turnier mit tollen Preisen! Melde dich jetzt an und zeige, was du drauf hast.</p>
+            </div>
+            <div class="event-card">
+                <div class="event-date">📅 22. November 2024</div>
+                <h3>Stream Night Marathon</h3>
+                <p>12 Stunden non-stop Gaming Action mit dem gesamten Team. Sei dabei im Chat!</p>
+            </div>
+            <div class="event-card">
+                <div class="event-date">📅 01. Dezember 2024</div>
+                <h3>Anfänger Workshop</h3>
+                <p>Lerne von den Pros! Wir zeigen dir die besten Strategien und Tricks für dein Lieblingsspiel.</p>
+            </div>
+            <div class="event-card">
+                <div class="event-date">📅 15. Dezember 2024</div>
+                <h3>Winter Special Event</h3>
+                <p>Festliches Community-Event mit besonderen Challenges und exklusiven Belohnungen!</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="kontakt" class="section">
+        <h2>Kontaktiere uns</h2>
+        <div class="contact-form">
+            <form onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">E-Mail</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Nachricht</label>
+                    <textarea id="message" name="message" required></textarea>
+                </div>
+                <button type="submit" class="cta-button" style="width: 100%;">Nachricht senden</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Buildattack Gaming Community. Alle Rechte vorbehalten.</p>
+    </footer>
+
+    <script>
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Check URL hash on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash && document.getElementById(hash)) {
+                showSection(hash);
+            }
+        });
+
+        // Handle hash changes
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash && document.getElementById(hash)) {
+                showSection(hash);
+            }
+        });
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            alert('Vielen Dank für deine Nachricht! Wir melden uns bald bei dir.');
+            event.target.reset();
+        }
+    </script>
+</body>
+</html>
